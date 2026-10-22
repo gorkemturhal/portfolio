@@ -1,0 +1,290 @@
+---
+/**
+ * Tek bir görsel, loop video ya da yer tutucu.
+ *
+ * Kalite kuralları:
+ * - Görseller AVIF + WebP olarak, yüksek kaliteyle (90) ve ekran genişliğinin 2 katına kadar srcset ile üretilir.
+ *   Tarayıcı, gösterilen genişliğin retina karşılığını seçer; asla büyütülmüş bir dosya görmez.
+ * - Videolar yeniden sıkıştırılmaz; public/ altındaki dosyalar olduğu gibi sunulur.
+ *   Aynı ada sahip .webm (AV1), .hevc.mp4 ve .mp4 (H.264) varsa hepsi <source> olarak eklenir.
+ * - Kutunun oranı baştan bellidir, yüklenirken sayfa kaymaz.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import type { ImageMetadata } from 'astro';
+import { Picture } from 'astro:assets';
+import { lqip } from '../lib/lqip';
+
+export type MediaItem = {
+  image?: ImageMetadata;
+  video?: string;
+  poster?: ImageMetadata;
+  alt?: string;
+  caption?: string;
+  label?: string;
+  aspect?: string;
+};
+
+interface Props {
+  item: MediaItem;
+  /** Bu kutunun sayfadaki CSS genişliği (srcset seçimi için). */
+  sizes: string;
+  /** Üretilecek genişlikler; orijinalden büyük olanlar atlanır. */
+  widths: readonly number[];
+  /** Görselin oranı yoksa kullanılacak oran, örn. "5/4". */
+  fallbackAspect?: string;
+  /** Ekranın ilk görünen kısmındaysa true: lazy yüklenmez, öncelik alır. */
+  priority?: boolean;
+  /** Video için duraklat/oynat düğmesi göster (kart içinde link varsa kapatılır). */
+  controls?: boolean;
+  /** Kutuyu verilen orana zorla (kapakta olduğu gibi). Görsel kırpılabilir. */
+  forceAspect?: boolean;
+  class?: string;
+  reveal?: boolean;
+}
+
+const {
+  item,
+  sizes,
+  widths,
+  fallbackAspect = '5/4',
+  priority = false,
+  controls = true,
+  forceAspect = false,
+  class: className,
+  reveal = true,
+} = Astro.props;
+
+const still = item.image ?? item.poster;
+// Yükleme sırasında kutuda görünecek bulanık önizleme (görselin ya da video posterinin)
+const placeholder = await lqip(still);
+const aspect =
+  item.aspect ??
+  (forceAspect ? fallbackAspect : still ? `${still.width}/${still.height}` : fallbackAspect);
+
+// Orijinalden büyük genişlik üretme; liste orijinali aşıyorsa orijinali de ekle.
+const finalWidths: number[] = [];
+if (still) {
+  finalWidths.push(...widths.filter((w) => w < still.width));
+  if (Math.max(...widths) >= still.width) finalWidths.push(still.width);
+}
+
+// public/ altındaki varyantları build sırasında bul.
+type Source = { src: string; type: string };
+const sources: Source[] = [];
+if (item.video) {
+  const base = item.video.replace(/\.(mp4|webm|mov)$/i, '');
+  const publicDir = path.resolve('public');
+  const variants: Source[] = [
+    { src: `${base}.webm`, type: 'video/webm; codecs="av01.0.08M.08"' },
+    { src: `${base}.hevc.mp4`, type: 'video/mp4; codecs="hvc1"' },
+    { src: `${base}.mp4`, type: 'video/mp4' },
+  ];
+  for (const v of variants) {
+    if (fs.existsSync(path.join(publicDir, v.src))) sources.push(v);
+  }
+  if (!sources.length) {
+    console.warn(`[Media] Video bulunamadı: public${base}.mp4`);
+  }
+}
+const hasVideo = sources.length > 0;
+const label = item.label ?? (item.video && !hasVideo ? `Missing video · ${item.video}` : undefined);
+const caption = item.caption?.trim();
+---
+
+<figure class:list={['media-figure', className]} data-reveal={reveal ? '' : undefined}>
+<div
+  class:list={['media', { 'has-video': hasVideo, 'is-empty': !still && !hasVideo }]}
+  style={`aspect-ratio: ${aspect}`}
+  data-media
+>
+  {placeholder && <div class="media-lqip" style={`background-image:url(${placeholder})`} aria-hidden="true" />}
+  {
+    still && (
+      <Picture
+        src={still}
+        alt={hasVideo ? '' : item.alt ?? ''}
+        widths={finalWidths}
+        sizes={sizes}
+        formats={['avif', 'webp']}
+        quality={90}
+        loading={priority ? 'eager' : 'lazy'}
+        decoding="async"
+        fetchpriority={priority ? 'high' : 'auto'}
+        class="media-still"
+        data-loading=""
+      />
+    )
+  }
+  {
+    hasVideo && (
+      <video
+        class="media-video"
+        muted
+        loop
+        playsinline
+        disablepictureinpicture
+        disableRemotePlayback
+        preload={priority ? 'auto' : 'none'}
+        aria-label={item.alt || undefined}
+        data-loop-video
+      >
+        {sources.map((s) => (
+          <source src={s.src} type={s.type} />
+        ))}
+      </video>
+    )
+  }
+  {
+    hasVideo && controls && (
+      <button class="media-toggle" type="button" aria-label="Pause video" data-video-toggle>
+        <svg class="icon-pause" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+          <rect x="2" y="1.5" width="2.75" height="9" rx="1" />
+          <rect x="7.25" y="1.5" width="2.75" height="9" rx="1" />
+        </svg>
+        <svg class="icon-play" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+          <path d="M3 2.1v7.8a.8.8 0 0 0 1.2.7l6.3-3.9a.8.8 0 0 0 0-1.4L4.2 1.4A.8.8 0 0 0 3 2.1Z" />
+        </svg>
+      </button>
+    )
+  }
+  {label && !still && !hasVideo && <span class="media-label">{label}</span>}
+</div>
+{caption && <figcaption class="media-caption">{caption}</figcaption>}
+</figure>
+
+<style>
+  .media-figure {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .media-caption {
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--text-tertiary);
+    text-wrap: pretty;
+  }
+
+  .media {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border-radius: var(--radius-media);
+    background: var(--surface-media);
+    /* Safari'de overflow + border-radius + video köşelerini düzgün kırpar. */
+    isolation: isolate;
+    transform: translateZ(0);
+  }
+
+  .media :global(picture),
+  .media :global(.media-still),
+  .media-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .media :global(.media-still),
+  .media-video {
+    object-fit: cover;
+  }
+
+  /* Bulanık önizleme: minik görsel büyütülüp bulanıklaştırılır; kenarlar taşmasın diye hafif büyütülür. */
+  .media-lqip {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: blur(14px);
+    transform: scale(1.08);
+  }
+
+  /* Asıl görsel, önizlemenin üstünde netleşerek belirir (blur köprüsü). */
+  :global(html.js) .media :global(.media-still[data-loading]) {
+    opacity: 0;
+    filter: blur(8px);
+  }
+  .media :global(.media-still) {
+    transition:
+      opacity 450ms ease,
+      filter 450ms var(--ease-out);
+  }
+
+  /* Video, ilk karesi oynamaya başlayınca posterin üstüne yumuşakça gelir. */
+  .media-video {
+    opacity: 0;
+    transition: opacity 400ms ease;
+  }
+  .media-video[data-ready] {
+    opacity: 1;
+  }
+
+  .media-label {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+
+  /* Duraklat/oynat: varsayılan olarak gizli, hover/focus'ta görünür. */
+  .media-toggle {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    color: #fff;
+    background: rgb(23 23 23 / 0.56);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    opacity: 0;
+    transform: scale(0.9);
+    transition:
+      opacity 200ms var(--ease-out),
+      transform 200ms var(--ease-out);
+  }
+  .media-toggle svg {
+    fill: currentColor;
+  }
+  .media-toggle .icon-play,
+  .media-toggle[data-paused] .icon-pause {
+    display: none;
+  }
+  .media-toggle[data-paused] .icon-play {
+    display: block;
+  }
+  .media-toggle:focus-visible,
+  .media-toggle[data-paused] {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .media-toggle:active {
+    transform: scale(0.94);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .media:hover .media-toggle {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  /* Dokunmatikte hover yok; düğme hep görünür ama sakin. */
+  @media (hover: none) {
+    .media-toggle {
+      opacity: 0.85;
+      transform: scale(1);
+    }
+  }
+</style>

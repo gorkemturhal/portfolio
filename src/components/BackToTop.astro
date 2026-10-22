@@ -1,0 +1,52 @@
+---
+/** Mobilde uzun sayfada yön bulma: bir ekran aşağı inince belirir. */
+---
+
+<a href="#top" class="to-top" aria-label="Back to top" data-to-top>
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+  </svg>
+</a>
+
+<style>
+  .to-top {
+    position: fixed;
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    z-index: 10;
+    display: none;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 999px;
+    color: #fff;
+    background: rgb(23 23 23 / 0.88);
+    box-shadow: 0 6px 20px rgb(0 0 0 / 0.16);
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+    pointer-events: none;
+    transition:
+      opacity 200ms var(--ease-out),
+      transform 200ms var(--ease-out);
+  }
+  .to-top[data-visible] {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  .to-top:active {
+    transform: scale(0.94);
+  }
+
+  @media (max-width: 1023px) {
+    .to-top {
+      display: grid;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .to-top {
+      transform: none;
+    }
+  }
+</style>

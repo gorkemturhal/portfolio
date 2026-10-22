@@ -1,0 +1,165 @@
+---
+/**
+ * Proje detayının sonunda bir sonraki projeye geçiş.
+ * Tıklayarak ya da sayfanın sonunda kaydırmaya devam ederek geçilir: kaydırma, kartın içini soldan doldurur.
+ * Davranış src/scripts/main.ts → setupNextProject().
+ */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  href: string;
+  title: string;
+  thumb?: ImageMetadata;
+}
+const { href, title, thumb } = Astro.props;
+---
+
+<nav class="next" aria-label="Next project">
+  <a href={href} class="next-link" data-next aria-label={`Next project: ${title}`}>
+    <span class="next-fill" aria-hidden="true"></span>
+    {
+      thumb && (
+        <Image src={thumb} alt="" width={56} height={56} densities={[1, 2, 3]} quality={85} class="next-thumb" />
+      )
+    }
+    <span class="next-text">
+      <span class="next-kicker">Next project</span>
+      <span class="next-title">{title}</span>
+    </span>
+    <span class="next-arrow" aria-hidden="true">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M9.3 3.5 13.8 8l-4.5 4.5M13.5 8H2.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+    </span>
+  </a>
+  <p class="next-hint" aria-hidden="true">Keep scrolling or click to continue</p>
+</nav>
+
+<style>
+  .next {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 72px;
+  }
+
+  .next-link {
+    --p: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px 12px 12px;
+    border-radius: var(--radius-media);
+    background: var(--surface-card);
+    overflow: hidden;
+    isolation: isolate;
+    transition: transform 160ms var(--ease-out);
+  }
+  .next-link:active {
+    transform: scale(0.985);
+  }
+
+  /* Dolgu: kaydırma ilerlemesini birebir takip eder (çekerken geçiş yok), bırakınca ease-out ile geri çekilir. */
+  .next-fill {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--surface-media);
+    transform: scaleX(var(--p));
+    transform-origin: left center;
+    transition: transform 220ms var(--ease-out);
+  }
+  .next-link[data-pulling] .next-fill {
+    transition: none;
+  }
+  .next-link[data-hinting] .next-fill {
+    animation: next-hint 520ms both;
+  }
+  @keyframes next-hint {
+    0% {
+      transform: scaleX(0);
+      animation-timing-function: var(--ease-out);
+    }
+    45% {
+      transform: scaleX(0.3);
+    }
+    55% {
+      transform: scaleX(0.3);
+      animation-timing-function: var(--ease-in-out);
+    }
+    100% {
+      transform: scaleX(0);
+    }
+  }
+
+  .next-thumb {
+    width: 56px;
+    height: 56px;
+    flex: 0 0 56px;
+    border-radius: 10px;
+    object-fit: cover;
+    background: var(--surface-media);
+  }
+  .next-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .next-kicker {
+    font-size: 13px;
+    color: var(--text-tertiary);
+  }
+  .next-title {
+    font-size: 16px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .next-arrow {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    border-radius: 999px;
+    background: var(--surface-page);
+    transition: transform 200ms var(--ease-out);
+  }
+  .next-hint {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-tertiary);
+    text-align: center;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .next-link:hover .next-arrow {
+      transform: translateX(3px);
+    }
+  }
+
+  /* Dokunmatikte kaydırarak geçiş yok; ipucu sadece dokunmayı söyler. */
+  @media (hover: none) {
+    .next-hint {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .next-fill {
+      display: none;
+    }
+    .next-hint {
+      display: none;
+    }
+    .next-link,
+    .next-arrow {
+      transition: none;
+    }
+  }
+</style>

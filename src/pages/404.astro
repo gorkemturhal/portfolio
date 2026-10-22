@@ -1,0 +1,90 @@
+---
+/** Bulunamayan sayfa: sitenin diliyle kısa bir açıklama ve ana sayfaya/işlere dönüş. */
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import { profile } from '../data/site';
+---
+
+<Base title={`Page not found · ${profile.name}`} description="This page doesn't exist or has moved.">
+  <main class="nf">
+    <a href="/" class="nf-identity" aria-label={`${profile.name}, home`}>
+      <Image src={profile.avatar} alt="" width={40} height={40} densities={[1, 2, 3]} quality={90} class="nf-avatar" />
+      <span class="nf-name">{profile.name}</span>
+    </a>
+    <p class="t-caption t-muted">404</p>
+    <h1 class="t-h4 nf-title">This page doesn't exist</h1>
+    <p class="t-body-2 t-muted text-pretty nf-text">The link may be broken, or the page may have moved. Everything else is one click away.</p>
+    <div class="nf-actions">
+      <a href="/" class="nf-btn nf-btn-primary">Back to home</a>
+      <a href="/#works" class="nf-btn">See my work</a>
+    </div>
+  </main>
+</Base>
+
+<style>
+  .nf {
+    grid-column: 1 / -1;
+    justify-self: center;
+    box-sizing: border-box;
+    width: min(520px, 100%);
+    min-height: 100dvh;
+    margin: 0 auto;
+    padding: 48px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+  }
+  .nf-identity {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+    align-self: flex-start;
+  }
+  .nf-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    object-fit: cover;
+  }
+  .nf-name {
+    font-weight: 500;
+  }
+  .nf-title {
+    margin: 0;
+  }
+  .nf-text {
+    margin: 0;
+    max-width: 44ch;
+  }
+  .nf-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .nf-btn {
+    display: inline-flex;
+    align-items: center;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 500;
+    background: var(--surface-subtle);
+    transition: transform 160ms var(--ease-out);
+  }
+  .nf-btn-primary {
+    color: #fff;
+    background: var(--text-primary);
+  }
+  .nf-btn:active {
+    transform: scale(0.97);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nf-btn {
+      transition: none;
+    }
+  }
+</style>

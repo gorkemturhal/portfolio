@@ -1,0 +1,276 @@
+---
+import { Image } from 'astro:assets';
+import { profile, sections } from '../data/site';
+import ClientLogos from './ClientLogos.astro';
+---
+
+<aside class="shell-side side">
+  <div class="side-top">
+    <div class="profile">
+      <Image
+        src={profile.avatar}
+        alt=""
+        width={56}
+        height={56}
+        densities={[1, 2, 3]}
+        quality={90}
+        loading="eager"
+        class="avatar"
+        transition:name="identity-avatar"
+        data-enter
+        style="--i: 0"
+      />
+      <div class="name" data-enter style="--i: 1">
+        <h1 class="t-h5">{profile.name}</h1>
+        <p class="t-body-2 t-muted">{profile.title}</p>
+      </div>
+      <p class="t-body-2 text-pretty" data-enter style="--i: 2">{profile.bio}</p>
+      <p class="status" data-enter style="--i: 3">
+        <span class="status-dot" aria-hidden="true"></span>
+        {profile.status}
+      </p>
+      <ul class="links" data-enter style="--i: 4">
+        {
+          profile.links.map((l) => (
+            <li>
+              <a
+                class="link"
+                href={l.href}
+                {...(l.href.startsWith('http') || l.href.endsWith('.pdf') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                {...('copy' in l && l.copy ? { 'data-copy': l.copy, 'aria-label': `Copy email address ${l.copy}` } : {})}
+              >
+                {'copy' in l && l.copy ? (
+                  <span class="copy-swap">
+                    <span class="copy-idle">{l.label}</span>
+                    <span class="copy-done" aria-hidden="true">&nbsp;copied</span>
+                  </span>
+                ) : (
+                  l.label
+                )}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <nav class="nav" aria-label="Sections" data-enter style="--i: 5">
+      <span class="nav-dot" aria-hidden="true" data-nav-dot></span>
+      <ul>
+        {
+          sections.map((s, i) => (
+            <li>
+              <a href={`#${s.id}`} class="nav-item" data-nav-link={s.id} aria-current={i === 0 ? 'true' : undefined}>
+                {s.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+
+  <!-- Mobilde müşteriler projelerden sonra gösterilir (index.astro). -->
+  <ClientLogos class="desktop-only" headingId="clients-side" data-enter style="--i: 6" />
+</aside>
+
+<style>
+  .side {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 48px;
+  }
+
+  .side-top {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .profile {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    object-fit: cover;
+  }
+
+  .name {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    background: var(--surface-subtle);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  .status-dot {
+    position: relative;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--status-green);
+  }
+  /* Sakin bir "çevrimiçi" nabzı. Dekoratif, bu yüzden yavaş ve küçük. */
+  .status-dot::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: inherit;
+    animation: ping 2.4s var(--ease-out) infinite;
+  }
+  @keyframes ping {
+    0% {
+      transform: scale(1);
+      opacity: 0.5;
+    }
+    70%,
+    100% {
+      transform: scale(2.6);
+      opacity: 0;
+    }
+  }
+
+  .links {
+    display: flex;
+    gap: 16px;
+  }
+
+  /* Tıklama alanı görünenden büyük (≥32px). */
+  .link {
+    display: inline-block;
+    padding: 6px 0;
+    margin: -6px 0;
+    text-decoration: underline dotted;
+    text-decoration-color: var(--text-tertiary);
+    text-decoration-thickness: 8%;
+    text-underline-offset: 3px;
+    transition: text-decoration-color 150ms ease;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .link:hover {
+      text-decoration-color: var(--text-primary);
+    }
+  }
+
+  /* Kopyalanınca sadece değişen kısım hareket eder: "Email" yerinde kalır, noktalı çizgisi solar,
+     yanına " copied" soldan açılır (180ms ease-out; geri dönüş 140ms, daha hızlı).
+     Ek kelimenin yeri baştan ayrılır, yanındaki linkler kaymaz. */
+  .copy-swap {
+    display: inline-flex;
+  }
+  .copy-idle {
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-decoration-color: var(--text-tertiary);
+    text-decoration-thickness: 8%;
+    text-underline-offset: 3px;
+    transition: text-decoration-color 140ms ease;
+  }
+  .copy-done {
+    color: var(--text-tertiary);
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+    transition:
+      opacity 140ms var(--ease-out),
+      clip-path 140ms var(--ease-out);
+  }
+  .link[data-copied] .copy-idle {
+    text-decoration-color: transparent;
+  }
+  .link[data-copied] .copy-done {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+    transition-duration: 180ms;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .link:hover .copy-idle {
+      text-decoration-color: var(--text-primary);
+    }
+    .link[data-copied]:hover .copy-idle {
+      text-decoration-color: transparent;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .copy-done {
+      clip-path: none;
+      transition: opacity 120ms linear;
+    }
+  }
+
+  /* Bölüm navigasyonu: aktif öğeyi gösteren nokta, öğeler arasında kayar. */
+  .nav {
+    position: relative;
+  }
+  .nav ul {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .nav-item {
+    display: inline-block;
+    color: var(--text-tertiary);
+    transition: color 200ms ease;
+  }
+  .nav-item[aria-current='true'] {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .nav-item:hover {
+      color: var(--text-primary);
+    }
+  }
+  .nav-dot {
+    position: absolute;
+    left: -8px;
+    top: 9px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--text-primary);
+    transform: translateY(var(--dot-y, 0px));
+    transition: transform 300ms var(--ease-in-out);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .status-dot::after {
+      animation: none;
+    }
+    .nav-dot {
+      transition: none;
+    }
+  }
+
+  @media (max-width: 1023px) {
+    .side {
+      gap: 0;
+    }
+    .avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+    }
+    /* Mobilde bölümler zaten alt alta; yan navigasyon gereksiz. */
+    .nav {
+      display: none;
+    }
+  }
+</style>

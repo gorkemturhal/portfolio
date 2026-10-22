@@ -1,0 +1,325 @@
+@import '@fontsource-variable/geist';
+
+/* ───────────────────────── Tokens (Figma değişkenleri) ───────────────────────── */
+:root {
+  --text-primary: #171717;
+  --text-tertiary: #6a6a6a;
+  --text-muted: #6b6b6b;
+  --text-date: #737373;
+  --surface-page: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-subtle: #f7f7f7;
+  --surface-card: #f6f6f6;
+  --surface-media: #ededed;
+  --border-subtle: #e3e3e3;
+  --status-green: #21b05e;
+
+  --font: 'Geist Variable', 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* Sol kolon Figma oranında büyür (400/1440 = %27.78), 480px'te durur.
+   * İçerik 1200px'te durur: medya 1200×960 / 588×784 için export ediliyor, daha geniş gösterilirse büyütülür.
+   * İkisi de tavana ulaşınca tüm düzen ortalanır; artan alan iki yana eşit bölünür. */
+  --sidebar-w: clamp(320px, 27.78vw, 480px);
+  --pad: 36px;
+  --content-max: 1200px;
+  --shell-max: calc(480px + var(--content-max) + 2 * var(--pad));
+  --radius-media: 16px;
+  --radius-card: 24px;
+
+  /* Easing — yerleşik CSS eğrileri UI için fazla zayıf. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1); /* giriş / çıkış */
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1); /* ekranda hareket eden */
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  color-scheme: light;
+}
+
+/* ───────────────────────── Reset ───────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--surface-page);
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+figure {
+  margin: 0;
+  padding: 0;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+img,
+video,
+picture,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: #171717;
+  color: #fff;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Görünürlük yardımcıları: mobilde bazı bloklar sayfada farklı yerde gösterilir. */
+.mobile-only {
+  display: none !important;
+}
+@media (max-width: 1023px) {
+  .desktop-only {
+    display: none !important;
+  }
+  .mobile-only {
+    display: flex !important;
+  }
+}
+
+/* ───────────────────────── Typography (Figma text styles) ───────────────────────── */
+.t-h4 {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+.t-h5 {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.t-h6 {
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+.t-body-2 {
+  font-size: 16px;
+  line-height: 1.4;
+}
+.t-body-1 {
+  font-size: 14px;
+  line-height: 1.4;
+}
+.t-caption {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.t-muted {
+  color: var(--text-tertiary);
+}
+.text-pretty {
+  text-wrap: pretty;
+}
+
+/* ───────────────────────── Shell: sabit sol kolon + kayan sağ kolon ───────────────────────── */
+.shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  max-width: var(--shell-max);
+  margin-inline: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.shell-side {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  padding: var(--pad);
+  background: var(--surface-page);
+}
+.shell-side::-webkit-scrollbar {
+  display: none;
+}
+
+.shell-main {
+  padding: var(--pad);
+  min-width: 0;
+}
+
+.shell-main-inner {
+  max-width: var(--content-max);
+}
+
+@media (max-width: 1279px) {
+  :root {
+    --sidebar-w: 320px;
+  }
+}
+
+@media (max-width: 1023px) {
+  :root {
+    --pad: 16px;
+  }
+  .shell {
+    display: block;
+  }
+  .shell-side {
+    position: static;
+    height: auto;
+    overflow: visible;
+    padding: 24px var(--pad) 8px;
+  }
+  .shell-main {
+    padding: 40px var(--pad) 80px;
+  }
+}
+
+/* ───────────────────────── Motion ─────────────────────────
+ * 1) İlk yükleme: [data-enter] öğeleri sırayla (stagger) belirir. Yalnızca ilk açılışta;
+ *    sayfa geçişlerinde view transition devralır (aynı içerik iki kez canlanmasın).
+ * 2) Scroll: [data-reveal] öğeleri görünür alana girince bir kez belirir.
+ * JS yoksa (.js sınıfı yoksa) içerik asla gizlenmez.
+ */
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+html.js.first-load [data-enter] {
+  animation: enter 500ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 50ms + 40ms);
+}
+
+html.js [data-reveal] {
+  transition:
+    opacity 700ms var(--ease-out),
+    transform 700ms var(--ease-out);
+}
+html.js [data-reveal]:not(.is-visible) {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+/* İlk ekrandaki medya: JS beklemeden, CSS ile sırayla girer (80ms aralık). */
+@keyframes enter-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+html.js.first-load [data-reveal].in-first-view {
+  transition: none;
+  animation: enter-reveal 700ms var(--ease-out) both;
+  animation-delay: calc(var(--ri, 0) * 80ms + 160ms);
+}
+
+/* Sayfa geçişi: eski sayfa hızlı çıkar, yeni sayfa biraz daha yavaş girer.
+ * Hafif blur, iki durumun üst üste binmesini tek bir dönüşüm gibi gösterir. */
+@keyframes page-out {
+  to {
+    opacity: 0;
+    filter: blur(2px);
+  }
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.js.first-load [data-enter] {
+    animation-name: fade;
+    animation-duration: 200ms;
+  }
+  html.js [data-reveal] {
+    transition: opacity 300ms ease;
+  }
+  html.js [data-reveal]:not(.is-visible) {
+    transform: none;
+  }
+  html.js.first-load [data-reveal].in-first-view {
+    animation-name: fade;
+    animation-duration: 300ms;
+  }
+  @keyframes page-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes page-out {
+    to {
+      opacity: 0;
+    }
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}

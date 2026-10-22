@@ -1,0 +1,70 @@
+---
+import { clients } from '../data/site';
+
+import type { HTMLAttributes } from 'astro/types';
+
+type Props = HTMLAttributes<'section'> & { headingId?: string };
+const { class: className, headingId = 'clients-title', ...rest } = Astro.props;
+---
+
+<section class:list={['clients', className]} aria-labelledby={headingId} {...rest}>
+  <h2 id={headingId} class="t-caption t-muted">Worked with</h2>
+  <ul class="logos">
+    {
+      clients.map((c) => (
+        <li class="logo-cell">
+          {c.mask ? (
+            <span
+              class="logo-mask"
+              role="img"
+              aria-label={c.name}
+              style={`width:${c.width}px;height:${c.height}px;-webkit-mask-image:url("${c.src.src}");mask-image:url("${c.src.src}")`}
+            />
+          ) : (
+            <img src={c.src.src} alt={c.name} width={c.width} height={c.height} loading="lazy" decoding="async" />
+          )}
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  .clients {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .logos {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    max-width: 313px;
+  }
+  .logo-cell {
+    display: grid;
+    place-items: center;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--surface-subtle);
+  }
+  .logo-cell img {
+    max-width: min(78px, 80%);
+    height: auto;
+  }
+  .logo-mask {
+    display: block;
+    max-width: 80%;
+    background: #595959;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+  }
+
+  @media (max-width: 1023px) {
+    .logos {
+      max-width: none;
+    }
+  }
+</style>
