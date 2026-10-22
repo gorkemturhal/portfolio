@@ -1,6 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
-import { Image, getImage } from 'astro:assets';
+import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import HomeSidebar from '../components/HomeSidebar.astro';
 import WorkCard from '../components/WorkCard.astro';
@@ -13,12 +13,9 @@ import { profile, howIWork, experience, about, shots } from '../data/site';
 const projects = (await getCollection('projects', ({ data }) => !data.draft)).sort(
   (a, b) => a.data.order - b.data.order,
 );
-// Paylaşım görseli: ilk projenin kapağı.
-const ogSource = projects[0]?.data.cover.image;
-const og = ogSource ? await getImage({ src: ogSource, width: 1200, format: 'jpg', quality: 85 }) : undefined;
 ---
 
-<Base title={`${profile.name} · ${profile.title}`} description={profile.bio} image={og?.src}>
+<Base title={`${profile.name} · ${profile.title}`} description={profile.bio} image="/og.jpg">
   <HomeSidebar />
 
   <main class="shell-main">
