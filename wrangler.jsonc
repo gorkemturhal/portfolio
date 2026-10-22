@@ -1,0 +1,13 @@
+{
+  // Cloudflare Workers ile statik site: `npm run build` çıktısı (dist) olduğu gibi yayınlanır.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "portfolio",
+  "compatibility_date": "2026-10-22",
+  "assets": {
+    "directory": "./dist",
+    // /work/lunafi -> dist/work/lunafi.html (sondaki / olmadan, trailingSlash: 'never' ile uyumlu)
+    "html_handling": "drop-trailing-slash",
+    // olmayan adresler sitenin kendi 404 sayfasını gösterir
+    "not_found_handling": "404-page"
+  }
+}

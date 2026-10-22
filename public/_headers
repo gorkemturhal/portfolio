@@ -1,0 +1,7 @@
+# Astro'nun parmak izli dosyaları değişmez: bir yıl önbellekte kalabilir.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Videolar bir gün taze, sonra arka planda yenilenir.
+/videos/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
